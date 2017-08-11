@@ -1,3 +1,10 @@
+rackspace-monitoring v0.8.0 - 2017-08-10:
+
+* Add support for metadata in alarms, notifications, and notification plans
+* Fix null attribute filtering for create and
+update operations.
+* Add active/scheduled suppression fields to entity/check/alarm objects
+
 rackspace-monitoring v0.7.2 - 2017-06-01:
 
 * Pin the correct libcloud version

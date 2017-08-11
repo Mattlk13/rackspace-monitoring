@@ -292,10 +292,6 @@ class RackspaceMonitoringDriver(MonitoringDriver, OpenStackDriverMixin):
     def _create(self, url, data, coerce, handler=None, headers=None):
         params = {}
 
-        for k in data.keys():
-            if data[k] is None:
-                del data[k]
-
         if 'who' in data:
             if data['who'] is not None:
                 params['_who'] = data['who']
@@ -305,10 +301,19 @@ class RackspaceMonitoringDriver(MonitoringDriver, OpenStackDriverMixin):
             if data['why'] is not None:
                 params['_why'] = data['why']
             del data['why']
+
+        # only use the non-null values in kwargs
+        request_data = {}
+
+        if hasattr(data, 'items'):
+            request_data = dict((k,v) for k,v in data.items() if v)
+        else:
+            request_data = dict((k,v) for k,v in data.iteritems() if v)
+
         resp = self.connection.request(url,
                                        method='POST',
                                        params=params,
-                                       data=data,
+                                       data=request_data,
                                        headers=headers)
         if handler is not None:
             return handler(resp)
@@ -324,19 +329,23 @@ class RackspaceMonitoringDriver(MonitoringDriver, OpenStackDriverMixin):
     def _update(self, url, data, kwargs, coerce):
         params = {}
 
-        for k in data.keys():
-            if data[k] is None:
-                del data[k]
-
         if 'who' in kwargs and kwargs['who'] is not None:
             params['_who'] = kwargs['who']
 
         if 'why' in kwargs and kwargs['why'] is not None:
             params['_why'] = kwargs['why']
 
+        # only use the non-null values in kwargs
+        request_data = {}
+
+        if hasattr(data, 'items'):
+            request_data = dict((k,v) for k,v in data.items() if v)
+        else:
+            request_data = dict((k,v) for k,v in data.iteritems() if v)
+
         headers = kwargs.get('headers', {})
         resp = self.connection.request(url, method='PUT', params=params,
-                                       data=data, headers=headers)
+                                       data=request_data, headers=headers)
 
         if resp.status == httplib.NO_CONTENT:
             # location
@@ -522,7 +531,8 @@ class RackspaceMonitoringDriver(MonitoringDriver, OpenStackDriverMixin):
                 'label': kwargs.get('label'),
                 'check_id': kwargs.get('check_id'),
                 'criteria': kwargs.get('criteria'),
-                'notification_plan_id': kwargs.get('notification_plan_id')}
+                'notification_plan_id': kwargs.get('notification_plan_id'),
+                'metadata': kwargs.get('metadata', {})}
         headers = kwargs.get('headers', {})
 
         return self._create("/entities/%s/alarms" % (entity.id),
@@ -641,7 +651,8 @@ class RackspaceMonitoringDriver(MonitoringDriver, OpenStackDriverMixin):
                 'why': kwargs.get('why'),
                 'label': kwargs.get('label'),
                 'type': kwargs.get('type'),
-                'details': kwargs.get('details')}
+                'details': kwargs.get('details'),
+                'metadata': kwargs.get('metadata', {})}
 
         return self._create("/notifications", data=data,
                             coerce=self.get_notification)
@@ -654,8 +665,10 @@ class RackspaceMonitoringDriver(MonitoringDriver, OpenStackDriverMixin):
     def test_notification(self, **kwargs):
         data = {'who': kwargs.get('who'),
                 'why': kwargs.get('why'),
+                'label': kwargs.get('label'),
                 'type': kwargs.get('type'),
-                'details': kwargs.get('details')}
+                'details': kwargs.get('details'),
+                'metadata': kwargs.get('metadata', {})}
         resp = self.connection.request('/test-notification', method='POST',
                                        data=data)
         return resp.object
@@ -702,7 +715,7 @@ class RackspaceMonitoringDriver(MonitoringDriver, OpenStackDriverMixin):
                 'critical_state': kwargs.get('critical_state', []),
                 'warning_state': kwargs.get('warning_state', []),
                 'ok_state': kwargs.get('ok_state', []),
-                }
+                'metadata': kwargs.get('metadata', {})}
         return self._create("/notification_plans", data=data,
                             coerce=self.get_notification_plan)
 

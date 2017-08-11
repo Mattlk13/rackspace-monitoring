@@ -7,7 +7,10 @@
             "label": "Status code",
             "notification_plan_id": "npIXxOAn5",
             "active_suppressions": [],
-            "scheduled_suppressions": []
+            "scheduled_suppressions": [],
+            "metadata": {
+                "cli": "rackmoncli"
+            }
         }
     ],
     "metadata": {

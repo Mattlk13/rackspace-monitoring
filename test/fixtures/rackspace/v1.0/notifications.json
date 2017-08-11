@@ -6,6 +6,9 @@
             "type": "webhook",
             "details": {
                 "url": "http://www.postbin.org/lulz"
+            },
+            "metadata": {
+                "cli": "rackmoncli"
             }
         },
         {

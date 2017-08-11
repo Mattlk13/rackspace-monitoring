@@ -299,6 +299,71 @@ class RackspaceTests(unittest.TestCase):
         alarm = self.driver.list_alarms(entity=en)[0]
         alarm.delete()
 
+    def test_create_notification_plan_with_metadata(self):
+        notification = self.driver.list_notifications()[0]
+        notif_plan = self.driver.create_notification_plan(
+            label="demo",
+            critical_state=[notification.id],
+            metadata={
+                "cli": "rackmoncli"
+            })
+        if hasattr(self, 'assetIsNotNone'):
+            self.assertIsNotNone(notif_plan)
+            self.assertIsNotNone(notif_plan.metadata)
+        else:
+            self.assertTrue(notif_plan is not None)
+            self.assertTrue(notif_plan.metadata is not None)
+        self.assertEqual(notif_plan.metadata, {
+                "cli": "rackmoncli"
+            })
+
+    def test_create_notification_with_metadata(self):
+        notification = self.driver.create_notification(
+            label="demo notification",
+            type="email",
+            details={
+                "address": "test@me.com"
+            },
+            metadata={
+                "cli": "rackmoncli"
+            }
+        )
+        if hasattr(self, 'assetIsNotNone'):
+            self.assertIsNotNone(notification)
+            self.assertIsNotNone(notification.metadata)
+        else:
+            self.assertTrue(notification is not None)
+            self.assertTrue(notification.metadata is not None)
+        self.assertEqual(notification.metadata, {
+                "cli": "rackmoncli"
+            })
+
+    def test_create_alarm_with_metadata(self):
+        notification_plan = self.driver.list_notification_plans()[0]
+        en = self.driver.list_entities()[0]
+        check = self.driver.list_checks(entity=en)[0]
+        alarm = self.driver.create_alarm(
+            en,
+            label="demo alarm",
+            check_id=check.id,
+            criteria=("if (metric[\"duration\"] >= 2) { "
+                     "return new AlarmStatus(OK); } "
+                     "return new AlarmStatus(CRITICAL);"),
+            notification_plan_id=notification_plan.id,
+            metadata={
+                "cli": "rackmoncli"
+            }
+        )
+        if hasattr(self, 'assetIsNotNone'):
+            self.assertIsNotNone(alarm)
+            self.assertIsNotNone(alarm.metadata)
+        else:
+            self.assertTrue(alarm is not None)
+            self.assertTrue(alarm.metadata is not None)
+        self.assertEqual(alarm.metadata, {
+                "cli": "rackmoncli"
+            })
+
     def test_delete_notification(self):
         notification = self.driver.list_notifications()[0]
         notification.delete()
@@ -465,14 +530,46 @@ class RackspaceMockHttp(MockHttpTestCase):
                 httplib.responses[httplib.OK])
 
     def _v1_0_23213_notifications(self, method, url, body, headers):
-        body = self.fixtures.load('notifications.json')
-        return (httplib.OK, body, self.json_content_headers,
-                httplib.responses[httplib.OK])
+        if method == 'POST':
+            # create method
+            create_json_content_headers = {
+                'accept': 'application/json',
+                'content-type': 'application/json; charset=UTF-8',
+                'location': 'http://example.com/v2.0/23213/notifications/ntQVm5IyiR'
+            }
+
+            body = self.fixtures.load('create_notification.json')
+            return (httplib.CREATED, body, create_json_content_headers,
+                    httplib.responses[httplib.CREATED])
+        elif method == 'GET':
+            body = self.fixtures.load('notifications.json')
+            return (httplib.OK, body, self.json_content_headers,
+                    httplib.responses[httplib.OK])
+        else:
+            raise NotImplementedError(
+                'method {} for _v1_0_23213_notifications not defined'.format(
+                    method))
 
     def _v1_0_23213_notification_plans(self, method, url, body, headers):
-        body = self.fixtures.load('notification_plans.json')
-        return (httplib.OK, body, self.json_content_headers,
-                httplib.responses[httplib.OK])
+        if method == 'POST':
+            # create method
+            create_json_content_headers = {
+                'accept': 'application/json',
+                'content-type': 'application/json; charset=UTF-8',
+                'location': 'http://example.com/v2.0/23213/notification_plans/npIXxOAn5'
+            }
+
+            body = self.fixtures.load('create_notification_plan.json')
+            return (httplib.CREATED, body, create_json_content_headers,
+                    httplib.responses[httplib.CREATED])
+        elif method == 'GET':
+            body = self.fixtures.load('notification_plans.json')
+            return (httplib.OK, body, self.json_content_headers,
+                    httplib.responses[httplib.OK])
+        else:
+            raise NotImplementedError(
+                'method {} for _v1_0_23213_notifications not defined'.format(
+                    method))
 
     def _v1_0_23213_entities_en8B9YwUn6_checks(self, method, url, body, headers):
         body = self.fixtures.load('checks.json')
@@ -489,9 +586,27 @@ class RackspaceMockHttp(MockHttpTestCase):
                 httplib.responses[httplib.OK])
 
     def _v1_0_23213_entities_en8B9YwUn6_alarms(self, method, url, body, headers):
-        body = self.fixtures.load('alarms.json')
-        return (httplib.OK, body, self.json_content_headers,
-                httplib.responses[httplib.OK])
+        if method == 'GET':
+            body = self.fixtures.load('alarms.json')
+            return (httplib.OK, body, self.json_content_headers,
+                    httplib.responses[httplib.OK])
+        elif method == 'POST':
+            # create method
+            create_json_content_headers = {
+                'accept': 'application/json',
+                'content-type': 'application/json; charset=UTF-8',
+                'location': ('http://example.com/v2.0/23213/entities/'
+                             'en8B9YwUn6/alarms/aldIpNY8t3')
+            }
+
+            body = self.fixtures.load('create_alarm.json')
+            return (httplib.CREATED, body, create_json_content_headers,
+                    httplib.responses[httplib.CREATED])
+        else:
+            raise NotImplementedError(
+                ("method {} for _v1_0_23213_entities_en8B9YwUn6_alarms"
+                 "not defined").format(method))
+        
 
     def _v1_0_23213_entities_en8B9YwUn6_alarms_aldIpNY8t3_notification_history(self,
                                                              method,
@@ -553,22 +668,41 @@ class RackspaceMockHttp(MockHttpTestCase):
             body = ''
             return (httplib.NO_CONTENT, body, self.json_content_headers,
                     httplib.responses[httplib.NO_CONTENT])
+        elif method == 'GET':
+            body = json.loads(
+                self.fixtures.load('alarms.json'))['values'][0]
+            return (httplib.OK, json.dumps(body), self.json_content_headers,
+                    httplib.responses[httplib.OK])
 
-        raise NotImplementedError('')
+        raise NotImplementedError(
+            ("method {} for _v1_0_23213_entities_en8B9YwUn6_alarms_aldIpNY8t3"
+             " dne").format(method))
 
     def _v1_0_23213_notifications_ntQVm5IyiR(self, method, url, body, headers):
         if method == 'DELETE':
             body = ''
             return (httplib.NO_CONTENT, body, self.json_content_headers,
                     httplib.responses[httplib.NO_CONTENT])
+        elif method == 'GET':
+            body = json.loads(
+                self.fixtures.load('notifications.json'))['values'][0]
+            return (httplib.OK, json.dumps(body), self.json_content_headers,
+                    httplib.responses[httplib.OK])
 
-        raise NotImplementedError('')
+        raise NotImplementedError(
+            'method {} for _v1_0_23213_notifications_ntQVm5IyiR dne'.format(
+                method))
 
     def _v1_0_23213_notification_plans_npIXxOAn5(self, method, url, body, headers):
         if method == 'DELETE':
             body = ''
             return (httplib.NO_CONTENT, body, self.json_content_headers,
                     httplib.responses[httplib.NO_CONTENT])
+        elif method == 'GET':
+            body = json.loads(
+                self.fixtures.load('notification_plans.json'))['values'][0]
+            return (httplib.OK, json.dumps(body), self.json_content_headers,
+                    httplib.responses[httplib.OK])
 
         raise NotImplementedError('')
 

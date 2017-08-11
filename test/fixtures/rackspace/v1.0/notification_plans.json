@@ -11,7 +11,10 @@
             ],
             "ok_state": [
                 "ntvJMd0gcG"
-            ]
+            ],
+            "metadata": {
+                "cli": "rackmoncli"
+            }
         },
         {
             "id": "npQzgFrC02",
