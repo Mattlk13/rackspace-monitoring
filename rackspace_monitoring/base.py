@@ -268,12 +268,14 @@ class AlarmChangelog(object):
 
 
 class LatestAlarmState(object):
-    def __init__(self, entity_id, check_id, alarm_id, timestamp, state):
+    def __init__(self, entity_id, check_id, alarm_id, timestamp, state,
+                 status):
         self.entity_id = entity_id
         self.check_id = check_id
         self.alarm_id = alarm_id
         self.timestamp = timestamp
         self.state = state
+        self.status = status
 
     def __str__(self):
         return self.__repr__()

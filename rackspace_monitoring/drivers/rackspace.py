@@ -1053,7 +1053,8 @@ class RackspaceMonitoringDriver(MonitoringDriver, OpenStackDriverMixin):
     def _to_latest_alarm_state(self, obj, value_dict):
         return LatestAlarmState(entity_id=obj['entity_id'],
                 check_id=obj['check_id'], alarm_id=obj['alarm_id'],
-                timestamp=obj['timestamp'], state=obj['state'])
+                timestamp=obj['timestamp'], state=obj['state'],
+                status=obj['status'])
 
     def _to_agent_host_info_overview_obj(self, data, value_dict):
         return {'agent_id': data['agent_id'],
