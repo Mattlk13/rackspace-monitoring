@@ -1,3 +1,7 @@
+rackspace-monitoring v0.8.1 - 2018-09-17:
+
+* Add status attribute to LatestAlarmState class
+
 rackspace-monitoring v0.8.0 - 2017-08-10:
 
 * Add support for metadata in alarms, notifications, and notification plans
